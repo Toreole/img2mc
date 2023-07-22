@@ -1,0 +1,2 @@
+Code for how the metadata for the textures was generated:
+https://gist.github.com/Toreole/662d068085ee53a4f6f3907f86ec44fc

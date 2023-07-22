@@ -1,0 +1,51 @@
+﻿@page "/"
+@using System.Text.Json;
+@using static System.Net.WebRequestMethods;
+
+@inject HttpClient Http
+
+@code {
+    string json = "[]";
+    TextureMetadata[] textureData = new TextureMetadata[0];
+
+    protected override async Task OnInitializedAsync()
+    {
+        var path = "images/tex_metadata.json";
+        string json = await Http.GetStringAsync(path);
+        textureData = JsonSerializer.Deserialize<TextureMetadata[]>(json) ?? new TextureMetadata[0];
+    }
+}
+
+<PageTitle>Index</PageTitle>
+
+<h1>Hello, world!</h1>
+
+Welcome to your new app.
+
+<SurveyPrompt Title="How is Blazor working for you?" />
+
+<table>
+    <thead>
+        <tr>
+            <th scope="col">Texture</th>
+            <th scope="col">Block</th>
+            <th scope="col">RGB</th>
+            <th scope="col">Hue V</th>
+            <th scope="col">Sat V</th>
+            <th scope="col">Sat A</th>
+            <th scope="col">Val V</th>
+        </tr>
+    </thead>
+    @foreach (var entry in textureData)
+    {
+        <tr>
+            <td><img src="images/mc_textures/@entry.fileName" /></td>
+            <td>@entry.blockName</td>
+            <td style="background-color: @entry.averageRGB.AsHexString()">@entry.averageRGB</td>
+            <td>@entry.hueVariance</td>
+            <td>@entry.saturationVariance</td>
+            <td>@entry.averageSaturation</td>
+            <td>@entry.valueVariance</td>
+        </tr>
+    }
+</table>
