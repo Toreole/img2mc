@@ -14,8 +14,45 @@
         string json = await Http.GetStringAsync(path);
         textureData = JsonSerializer.Deserialize<TextureMetadata[]>(json) ?? new TextureMetadata[0];
     }
-}
 
+    private void ButtonClicked()
+    {
+        Console.WriteLine("hello button");
+    }
+
+    private void SelectedFileChanged(InputFileChangeEventArgs args)
+    {
+        const string desiredContentType = "image/png";
+        Console.WriteLine($"File Selected: {args.File.Name} ||| is: {args.File.ContentType}");
+        if(args.File.ContentType is desiredContentType)
+        {
+            Console.WriteLine("We got a match!");
+
+            ReadFile(args.File.OpenReadStream());
+
+
+        }
+    }
+
+    private async void ReadFile(Stream stream)
+    {
+        byte[] buffer = new byte[8];
+        int count = await stream.ReadAsync(buffer, 0, 8);
+        Console.WriteLine(Convert.ToHexString(buffer));
+        if (buffer[1..4].SequenceEqual(new byte[] { 0x50, 0x4E, 0x47 }))
+        {
+            Console.WriteLine("File is a valid format PNG file? Maybe?");
+            count = await stream.ReadAsync(buffer, 0, 4);
+            int readLength = (buffer[0] << 24) | (buffer[1] << 16) | (buffer[2] << 8) | buffer[3];
+            //see https://en.wikipedia.org/wiki/PNG#%22Chunks%22_within_the_file 
+            //should read 13 (bytes) as length of the IHDR chunk
+            Console.WriteLine($"Read Chunk Length: {readLength}");
+            count = await stream.ReadAsync(buffer, 0, 4);
+            //expecting IHDR as first chunk. it containts width(4b), height(4b), bit depth (1b), color type(1b), compression method (1b, 0), filter(1b, 0), interlace(1b, 0/1) 
+            Console.WriteLine($"Chunk type: {(char)buffer[0]}{(char)buffer[1]}{(char)buffer[2]}{(char)buffer[3]}"); 
+        }
+    }
+}
 <PageTitle>Index</PageTitle>
 
 <h1>Hello, world!</h1>
@@ -23,6 +60,10 @@
 Welcome to your new app.
 
 <SurveyPrompt Title="How is Blazor working for you?" />
+
+<button @onclick="ButtonClicked">Hello There!</button>
+
+<InputFile OnChange="SelectedFileChanged"></InputFile> 
 
 <table>
     <thead>
