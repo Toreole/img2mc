@@ -13,6 +13,8 @@
     int outputRows = 0;
     int outputColumns = 0;
 
+    bool check = true;
+
     protected override async Task OnInitializedAsync()
     {
         var path = "images/tex_metadata.json";
@@ -39,10 +41,13 @@
             Console.WriteLine($"Read the file as image: {img.ToString()}");
             var px = img[0, 0];
 
-            if(img.Width > 128 || img.Height > 128)
+            if(img.Width > 128)
             {
-                var scaleFactor = 128f / Math.Max(img.Width, img.Height);
-                img.Mutate(x => x.Resize((int)(img.Width * scaleFactor), (int)(img.Width * scaleFactor)));
+                img.Mutate(x => x.Resize(128, 0));
+            }
+            else if(img.Height > 128)
+            {
+                img.Mutate(x => x.Resize(0, 128));
             }
             Console.WriteLine($"Resized image to {img.ToString()}");
             outputColumns = img.Width;
@@ -103,6 +108,8 @@ Welcome to your new app.
     Hello Button
     <!--<Tooltip Placement="TooltipPlacement.Top" Title="Block"> tooltip </Tooltip>Hello There!-->
 </button>
+
+<InputCheckbox Value="check" ValueExpression="() => check"/> 
 
 <InputFile OnChange="SelectedFileChanged"></InputFile> 
 
