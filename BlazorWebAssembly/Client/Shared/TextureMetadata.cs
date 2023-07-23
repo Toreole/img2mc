@@ -28,7 +28,7 @@ namespace BlazorWebAssembly.Client.Shared
     {
         [JsonInclude]
         public byte r, g, b;
-        public static implicit operator RGB(Color c) => new() { r = c.R, g = c.G, b = c.B };
+        public static implicit operator RGB(System.Drawing.Color c) => new() { r = c.R, g = c.G, b = c.B };
 
         public override string ToString()
         {
@@ -38,6 +38,11 @@ namespace BlazorWebAssembly.Client.Shared
         public string AsHexString()
         {
             return $"#{Convert.ToHexString(new byte[] { r, g, b })}";
+        }
+
+        public int RGBDistance(RGB other)
+        {
+            return Math.Abs((int)r - (int)other.r) + Math.Abs((int)g - (int)other.g) + Math.Abs((int)b - (int)other.b);
         }
     }
 }

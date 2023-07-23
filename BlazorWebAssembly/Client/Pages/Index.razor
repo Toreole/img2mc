@@ -6,7 +6,12 @@
 
 @code {
     string json = "[]";
+    string firstPixelRGBA = "";
     TextureMetadata[] textureData = new TextureMetadata[0];
+
+    TextureMetadata[,]? outputTextures = null;
+    int outputRows = 0;
+    int outputColumns = 0;
 
     protected override async Task OnInitializedAsync()
     {
@@ -22,35 +27,49 @@
 
     private void SelectedFileChanged(InputFileChangeEventArgs args)
     {
-        const string desiredContentType = "image/png";
         Console.WriteLine($"File Selected: {args.File.Name} ||| is: {args.File.ContentType}");
-        if(args.File.ContentType is desiredContentType)
-        {
-            Console.WriteLine("We got a match!");
-
-            ReadFile(args.File.OpenReadStream());
-
-
-        }
+        ReadFile(args.File.OpenReadStream());
     }
 
     private async void ReadFile(Stream stream)
     {
-        byte[] buffer = new byte[8];
-        int count = await stream.ReadAsync(buffer, 0, 8);
-        Console.WriteLine(Convert.ToHexString(buffer));
-        if (buffer[1..4].SequenceEqual(new byte[] { 0x50, 0x4E, 0x47 }))
+        try
         {
-            Console.WriteLine("File is a valid format PNG file? Maybe?");
-            count = await stream.ReadAsync(buffer, 0, 4);
-            int readLength = (buffer[0] << 24) | (buffer[1] << 16) | (buffer[2] << 8) | buffer[3];
-            //see https://en.wikipedia.org/wiki/PNG#%22Chunks%22_within_the_file 
-            //should read 13 (bytes) as length of the IHDR chunk
-            Console.WriteLine($"Read Chunk Length: {readLength}");
-            count = await stream.ReadAsync(buffer, 0, 4);
-            //expecting IHDR as first chunk. it containts width(4b), height(4b), bit depth (1b), color type(1b), compression method (1b, 0), filter(1b, 0), interlace(1b, 0/1) 
-            Console.WriteLine($"Chunk type: {(char)buffer[0]}{(char)buffer[1]}{(char)buffer[2]}{(char)buffer[3]}"); 
+            using Image<Rgba32> img = await Image.LoadAsync<Rgba32>(stream);
+            Console.WriteLine($"Read the file as image: {img.ToString()}");
+            var px = img[0, 0];
+
+            if(img.Width > 128 || img.Height > 128)
+            {
+                var scaleFactor = 128f / Math.Max(img.Width, img.Height);
+                img.Mutate(x => x.Resize((int)(img.Width * scaleFactor), (int)(img.Width * scaleFactor)));
+            }
+            Console.WriteLine($"Resized image to {img.ToString()}");
+            outputColumns = img.Width;
+            outputRows = img.Height;
+            var buffer = new TextureMetadata[outputColumns, outputRows];
+            for(int x = 0; x < outputColumns; x++)
+            {
+                for(int y = 0; y < outputRows; y++)
+                {
+                    buffer[x, y] = FindBestMatchingTexture(img[x, y]);
+                }
+            }
+            Console.WriteLine("Done processing image.");
+            outputTextures = buffer;
+            img.Dispose();
+            this.StateHasChanged();
         }
+        catch(Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+    }
+
+    private TextureMetadata FindBestMatchingTexture(Rgba32 pixel)
+    {
+        RGB col = new() { r = pixel.R, g = pixel.G, b = pixel.B };
+        return textureData.OrderBy(x => x.averageRGB.RGBDistance(col)).First();
     }
 }
 <PageTitle>Index</PageTitle>
@@ -61,10 +80,34 @@ Welcome to your new app.
 
 <SurveyPrompt Title="How is Blazor working for you?" />
 
-<button @onclick="ButtonClicked">Hello There!</button>
+<button @onclick="ButtonClicked">
+    Hello Button
+    <!--<Tooltip Placement="TooltipPlacement.Top" Title="Block"> tooltip </Tooltip>Hello There!-->
+</button>
 
 <InputFile OnChange="SelectedFileChanged"></InputFile> 
 
+@if(outputTextures != null)
+{
+    <div>Output texture is not null here</div>
+    <table>
+        <thead></thead>
+        @for(int row = 0; row < outputRows; row++)
+        {
+            <tr>
+            @for(int column = 0; column < outputColumns; column ++)
+            {
+                <td>
+                    <img src="images/mc_textures/@outputTextures[column, row].fileName"/>
+                    
+                </td>
+            }
+            </tr>
+        }
+    </table>
+}
+
+<!-- take this out for now.
 <table>
     <thead>
         <tr>
@@ -77,16 +120,17 @@ Welcome to your new app.
             <th scope="col">Val V</th>
         </tr>
     </thead>
-    @foreach (var entry in textureData)
+    @@foreach (var entry in textureData)
     {
         <tr>
-            <td><img src="images/mc_textures/@entry.fileName" /></td>
-            <td>@entry.blockName</td>
-            <td style="background-color: @entry.averageRGB.AsHexString()">@entry.averageRGB</td>
-            <td>@entry.hueVariance</td>
-            <td>@entry.saturationVariance</td>
-            <td>@entry.averageSaturation</td>
-            <td>@entry.valueVariance</td>
+            <td><img src="images/mc_textures/@@entry.fileName" /></td>
+            <td>@@entry.blockName</td>
+            <td style="background-color: @@entry.averageRGB.AsHexString()">@@entry.averageRGB</td>
+            <td>@@entry.hueVariance</td>
+            <td>@@entry.saturationVariance</td>
+            <td>@@entry.averageSaturation</td>
+            <td>@@entry.valueVariance</td>
         </tr>
     }
 </table>
+-->
