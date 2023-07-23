@@ -72,6 +72,25 @@
         return textureData.OrderBy(x => x.averageRGB.RGBDistance(col)).First();
     }
 }
+<style>
+    .mc_block {
+        width: 16px;
+        height: 16px;
+        max-height: 16px;
+        line-height: 10px;
+        margin: 0;
+        border: none;
+        padding: 0;
+    }
+    .mc_row {
+        height: 16px;
+        max-height: 16px;
+        line-height: 16px;
+        margin: 0;
+        padding: 0;
+        border: none;
+    }
+</style>
 <PageTitle>Index</PageTitle>
 
 <h1>Hello, world!</h1>
@@ -94,11 +113,11 @@ Welcome to your new app.
         <thead></thead>
         @for(int row = 0; row < outputRows; row++)
         {
-            <tr>
+            <tr class="mc_row">
             @for(int column = 0; column < outputColumns; column ++)
             {
-                <td>
-                    <img src="images/mc_textures/@outputTextures[column, row].fileName"/>
+                <td class="mc_block">
+                    <img src="images/mc_textures/@outputTextures[column, row].fileName" class="mc_block" />
                     
                 </td>
             }
