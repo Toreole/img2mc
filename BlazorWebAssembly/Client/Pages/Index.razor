@@ -10,10 +10,11 @@
     TextureMetadata[] textureData = new TextureMetadata[0];
 
     TextureMetadata[,]? outputTextures = null;
+    Dictionary<TextureMetadata, int> textureCounts = new();
     int outputRows = 0;
     int outputColumns = 0;
-
-    bool check = true;
+    int blockSize = 8;
+    public string BlockSizeString => blockSize.ToString() + "px";
 
     protected override async Task OnInitializedAsync()
     {
@@ -22,15 +23,10 @@
         textureData = JsonSerializer.Deserialize<TextureMetadata[]>(json) ?? new TextureMetadata[0];
     }
 
-    private void ButtonClicked()
-    {
-        Console.WriteLine("hello button");
-    }
-
     private void SelectedFileChanged(InputFileChangeEventArgs args)
     {
         Console.WriteLine($"File Selected: {args.File.Name} ||| is: {args.File.ContentType}");
-        ReadFile(args.File.OpenReadStream());
+        ReadFile(args.File.OpenReadStream(maxAllowedSize: 52428800));
     }
 
     private async void ReadFile(Stream stream)
@@ -61,6 +57,18 @@
                 }
             }
             Console.WriteLine("Done processing image.");
+            textureCounts.Clear();
+            foreach(var tex in buffer)
+            {
+                if(textureCounts.ContainsKey(tex))
+                {
+                    textureCounts[tex]++;
+                }
+                else
+                {
+                    textureCounts[tex] = 1;
+                }
+            }
             outputTextures = buffer;
             img.Dispose();
             this.StateHasChanged();
@@ -79,37 +87,30 @@
 }
 <style>
     .mc_block {
-        width: 16px;
-        height: 16px;
-        max-height: 16px;
-        line-height: 10px;
+        width: var(--block-size);
+        height: var(--block-size);
+        max-height: var(--block-size);
+        line-height: 0px;
         margin: 0;
         border: none;
         padding: 0;
     }
     .mc_row {
-        height: 16px;
-        max-height: 16px;
-        line-height: 16px;
+        height: var(--block-size);
+        max-height: var(--block-size);
+        line-height: 0px;
         margin: 0;
         padding: 0;
         border: none;
     }
 </style>
-<PageTitle>Index</PageTitle>
+<PageTitle>Img2Mc</PageTitle>
 
-<h1>Hello, world!</h1>
+<p style="--block-size: @BlockSizeString"> Block Size is currently @BlockSizeString </p>
+<input type="number" @bind-value="@blockSize" />
 
-Welcome to your new app.
 
-<SurveyPrompt Title="How is Blazor working for you?" />
-
-<button @onclick="ButtonClicked">
-    Hello Button
-    <!--<Tooltip Placement="TooltipPlacement.Top" Title="Block"> tooltip </Tooltip>Hello There!-->
-</button>
-
-<InputCheckbox Value="check" ValueExpression="() => check"/> 
+Please Select an image file:
 
 <InputFile OnChange="SelectedFileChanged"></InputFile> 
 
@@ -120,11 +121,11 @@ Welcome to your new app.
         <thead></thead>
         @for(int row = 0; row < outputRows; row++)
         {
-            <tr class="mc_row">
+            <tr class="mc_row" style="--block-size: @BlockSizeString">
             @for(int column = 0; column < outputColumns; column ++)
             {
                 <td class="mc_block">
-                    <img src="images/mc_textures/@outputTextures[column, row].fileName" class="mc_block" />
+                        <img src="images/mc_textures/@outputTextures[column, row].fileName" class="mc_block" style="--block-size: @BlockSizeString" />
                     
                 </td>
             }
@@ -132,6 +133,17 @@ Welcome to your new app.
         }
     </table>
 }
+
+<h2>Required blocks</h2>
+<ol>
+@foreach (var pair in textureCounts.OrderByDescending(x => x.Value))
+{
+    <li>
+            <img src="images/mc_textures/@pair.Key.fileName" /> @pair.Key.blockName x @pair.Value
+    </li>
+}
+</ol>
+
 
 <!-- take this out for now.
 <table>
