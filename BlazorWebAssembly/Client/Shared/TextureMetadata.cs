@@ -1,9 +1,9 @@
-﻿using System.Drawing;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 
 namespace BlazorWebAssembly.Client.Shared
 {
-
+    //should set up default pallets. something like 'only concrete' and stuff.
+    //disable/enable entire sets of blocks at once maybe at some point.
     [Serializable]
     public class TextureMetadata
     {
@@ -21,6 +21,9 @@ namespace BlazorWebAssembly.Client.Shared
         public float averageSaturation;
         [JsonInclude]
         public float valueVariance;
+        //whether to disallow using this block in the resulting pixelart.
+        //useful for user fine-tuning. (no netherite blocks, no respawn anchors, etc.)
+        public bool exclude = false;
     }
 
     [Serializable]
