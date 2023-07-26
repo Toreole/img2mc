@@ -4,6 +4,25 @@
     --block-size: 16px;
 }
 
+.mc_block {
+    width: var(--block-size);
+    height: var(--block-size);
+    max-height: var(--block-size);
+    line-height: 0px;
+    margin: 0;
+    border: none;
+    padding: 0;
+}
+
+.mc_row {
+    height: var(--block-size);
+    max-height: var(--block-size);
+    line-height: 0px;
+    margin: 0;
+    padding: 0;
+    border: none;
+}
+
 html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }

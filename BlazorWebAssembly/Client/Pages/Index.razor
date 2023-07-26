@@ -13,6 +13,7 @@
     Dictionary<TextureMetadata, int> textureCounts = new();
     int outputRows = 0;
     int outputColumns = 0;
+    int maxOutputImageSize = 128;
     int blockSize = 8;
     public string BlockSizeString => blockSize.ToString() + "px";
 
@@ -37,13 +38,13 @@
             Console.WriteLine($"Read the file as image: {img.ToString()}");
             var px = img[0, 0];
 
-            if(img.Width > 128)
+            if (img.Width > maxOutputImageSize)
             {
-                img.Mutate(x => x.Resize(128, 0));
+                img.Mutate(x => x.Resize(maxOutputImageSize, 0));
             }
-            else if(img.Height > 128)
+            else if (img.Height > maxOutputImageSize)
             {
-                img.Mutate(x => x.Resize(0, 128));
+                img.Mutate(x => x.Resize(0, maxOutputImageSize));
             }
             Console.WriteLine($"Resized image to {img.ToString()}");
             outputColumns = img.Width;
@@ -85,26 +86,11 @@
         return textureData.OrderBy(x => x.averageRGB.RGBDistance(col)).First();
     }
 }
-<style>
-    .mc_block {
-        width: var(--block-size);
-        height: var(--block-size);
-        max-height: var(--block-size);
-        line-height: 0px;
-        margin: 0;
-        border: none;
-        padding: 0;
-    }
-    .mc_row {
-        height: var(--block-size);
-        max-height: var(--block-size);
-        line-height: 0px;
-        margin: 0;
-        padding: 0;
-        border: none;
-    }
-</style>
+
 <PageTitle>Img2Mc</PageTitle>
+
+<MudSlider Min="16" Max="128" @bind-Value="maxOutputImageSize" /> @maxOutputImageSize
+<MudSlider Min="3" Max="16" @bind-Value="blockSize" />
 
 <p style="--block-size: @BlockSizeString"> Block Size is currently @BlockSizeString </p>
 <input type="number" @bind-value="@blockSize" />
@@ -125,7 +111,7 @@ Please Select an image file:
             @for(int column = 0; column < outputColumns; column ++)
             {
                 <td class="mc_block">
-                        <img src="images/mc_textures/@outputTextures[column, row].fileName" class="mc_block" style="--block-size: @BlockSizeString" />
+                        <img src="images/mc_textures/@outputTextures[column, row].fileName" class="mc_block"/>
                     
                 </td>
             }
@@ -139,7 +125,7 @@ Please Select an image file:
 @foreach (var pair in textureCounts.OrderByDescending(x => x.Value))
 {
     <li>
-            <img src="images/mc_textures/@pair.Key.fileName" /> @pair.Key.blockName x @pair.Value
+        <img src="images/mc_textures/@pair.Key.fileName" /> @pair.Key.blockName x @pair.Value
     </li>
 }
 </ol>
@@ -152,10 +138,6 @@ Please Select an image file:
             <th scope="col">Texture</th>
             <th scope="col">Block</th>
             <th scope="col">RGB</th>
-            <th scope="col">Hue V</th>
-            <th scope="col">Sat V</th>
-            <th scope="col">Sat A</th>
-            <th scope="col">Val V</th>
         </tr>
     </thead>
     @@foreach (var entry in textureData)
@@ -164,10 +146,6 @@ Please Select an image file:
             <td><img src="images/mc_textures/@@entry.fileName" /></td>
             <td>@@entry.blockName</td>
             <td style="background-color: @@entry.averageRGB.AsHexString()">@@entry.averageRGB</td>
-            <td>@@entry.hueVariance</td>
-            <td>@@entry.saturationVariance</td>
-            <td>@@entry.averageSaturation</td>
-            <td>@@entry.valueVariance</td>
         </tr>
     }
 </table>
