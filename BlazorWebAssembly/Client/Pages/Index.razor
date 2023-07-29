@@ -1,6 +1,7 @@
 ﻿@page "/"
 @using System.Text.Json;
 @using static System.Net.WebRequestMethods;
+@using Img2mc.Shared
 
 @inject HttpClient Http
 
@@ -89,12 +90,10 @@
 
 <PageTitle>Img2Mc</PageTitle>
 
-<MudSlider Min="16" Max="128" @bind-Value="maxOutputImageSize" /> @maxOutputImageSize
-<MudSlider Min="3" Max="16" @bind-Value="blockSize" />
+<MudSlider Min="16" Max="128" @bind-Value="maxOutputImageSize" Style="width: 200px"/> @maxOutputImageSize
+<MudSlider Min="3" Max="16" @bind-Value="blockSize" Style="width: 200px" />
 
 <p style="--block-size: @BlockSizeString"> Block Size is currently @BlockSizeString </p>
-<input type="number" @bind-value="@blockSize" />
-
 
 Please Select an image file:
 
