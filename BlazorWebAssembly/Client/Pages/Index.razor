@@ -1,20 +1,13 @@
 ﻿@page "/"
-@using System.Text.Json;
-@using static System.Net.WebRequestMethods;
+@using System.Text.Json
+@using static System.Net.WebRequestMethods
 @using Img2mc.Shared
+@using BlazorWebAssembly.Client.Core
 
 @inject HttpClient Http
+@inject ImageReconstructor imageReconstructor
 
 @code {
-    string json = "[]";
-    string firstPixelRGBA = "";
-    TextureMetadata[] textureData = new TextureMetadata[0];
-
-    TextureMetadata[,]? outputTextures = null;
-    Dictionary<TextureMetadata, int> textureCounts = new();
-    int outputRows = 0;
-    int outputColumns = 0;
-    int maxOutputImageSize = 128;
     int blockSize = 8;
     public string BlockSizeString => blockSize.ToString() + "px";
 
@@ -22,75 +15,25 @@
     {
         var path = "images/tex_metadata.json";
         string json = await Http.GetStringAsync(path);
-        textureData = JsonSerializer.Deserialize<TextureMetadata[]>(json) ?? new TextureMetadata[0];
+        imageReconstructor.blockData = JsonSerializer.Deserialize<MinecraftBlock[]>(json) ?? new MinecraftBlock[0];
+        imageReconstructor.OnOutputChanged += StateHasChanged;
+    }
+
+    ~Index()
+    {
+        imageReconstructor.OnOutputChanged -= StateHasChanged;
     }
 
     private void SelectedFileChanged(InputFileChangeEventArgs args)
     {
         Console.WriteLine($"File Selected: {args.File.Name} ||| is: {args.File.ContentType}");
-        ReadFile(args.File.OpenReadStream(maxAllowedSize: 52428800));
-    }
-
-    private async void ReadFile(Stream stream)
-    {
-        try
-        {
-            using Image<Rgba32> img = await Image.LoadAsync<Rgba32>(stream);
-            Console.WriteLine($"Read the file as image: {img.ToString()}");
-            var px = img[0, 0];
-
-            if (img.Width > maxOutputImageSize)
-            {
-                img.Mutate(x => x.Resize(maxOutputImageSize, 0));
-            }
-            else if (img.Height > maxOutputImageSize)
-            {
-                img.Mutate(x => x.Resize(0, maxOutputImageSize));
-            }
-            Console.WriteLine($"Resized image to {img.ToString()}");
-            outputColumns = img.Width;
-            outputRows = img.Height;
-            var buffer = new TextureMetadata[outputColumns, outputRows];
-            for(int x = 0; x < outputColumns; x++)
-            {
-                for(int y = 0; y < outputRows; y++)
-                {
-                    buffer[x, y] = FindBestMatchingTexture(img[x, y]);
-                }
-            }
-            Console.WriteLine("Done processing image.");
-            textureCounts.Clear();
-            foreach(var tex in buffer)
-            {
-                if(textureCounts.ContainsKey(tex))
-                {
-                    textureCounts[tex]++;
-                }
-                else
-                {
-                    textureCounts[tex] = 1;
-                }
-            }
-            outputTextures = buffer;
-            img.Dispose();
-            this.StateHasChanged();
-        }
-        catch(Exception ex)
-        {
-            Console.WriteLine(ex.Message);
-        }
-    }
-
-    private TextureMetadata FindBestMatchingTexture(Rgba32 pixel)
-    {
-        RGB col = new() { r = pixel.R, g = pixel.G, b = pixel.B };
-        return textureData.OrderBy(x => x.averageRGB.RGBDistance(col)).First();
+        imageReconstructor.ReadFile(args.File.OpenReadStream(maxAllowedSize: 52428800));
     }
 }
 
 <PageTitle>Img2Mc</PageTitle>
 
-<MudSlider Min="16" Max="128" @bind-Value="maxOutputImageSize" Style="width: 200px"/> @maxOutputImageSize
+<MudSlider Min="16" Max="128" @bind-Value="imageReconstructor.MaxOutputImageSize" Style="width: 200px" /> @imageReconstructor.MaxOutputImageSize
 <MudSlider Min="3" Max="16" @bind-Value="blockSize" Style="width: 200px" />
 
 <p style="--block-size: @BlockSizeString"> Block Size is currently @BlockSizeString </p>
@@ -99,18 +42,18 @@ Please Select an image file:
 
 <InputFile OnChange="SelectedFileChanged"></InputFile> 
 
-@if(outputTextures != null)
+@if(imageReconstructor.OutputTextures != null)
 {
     <div>Output texture is not null here</div>
     <table>
         <thead></thead>
-        @for(int row = 0; row < outputRows; row++)
+        @for (int row = 0; row < imageReconstructor.OutputRows; row++)
         {
             <tr class="mc_row" style="--block-size: @BlockSizeString">
-            @for(int column = 0; column < outputColumns; column ++)
+                @for (int column = 0; column < imageReconstructor.OutputColumns; column++)
             {
                 <td class="mc_block">
-                        <img src="images/mc_textures/@outputTextures[column, row].fileName" class="mc_block"/>
+                        <img src="images/mc_textures/@imageReconstructor.OutputTextures[column, row].fileName" class="mc_block" />
                     
                 </td>
             }
@@ -121,10 +64,10 @@ Please Select an image file:
 
 <h2>Required blocks</h2>
 <ol>
-@foreach (var pair in textureCounts.OrderByDescending(x => x.Value))
+    @foreach (var pair in imageReconstructor.textureCounts.OrderByDescending(x => x.Value))
 {
     <li>
-        <img src="images/mc_textures/@pair.Key.fileName" /> @pair.Key.blockName x @pair.Value
+        <img src="images/mc_textures/@pair.Key.fileName" /> @pair.Key.fileName x @pair.Value
     </li>
 }
 </ol>

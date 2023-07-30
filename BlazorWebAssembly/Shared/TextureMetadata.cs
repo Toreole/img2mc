@@ -1,6 +1,4 @@
-﻿using System.Text;
-using System.Text.Json.Serialization;
-using System.Text.RegularExpressions;
+﻿using System.Text.Json.Serialization;
 
 namespace Img2mc.Shared;
 
@@ -58,6 +56,8 @@ public class TextureMetadata
         this.averageSaturation = averageSaturation;
         this.valueVariance = valueVariance;
     }
+
+    public TextureMetadata() { }
 }
 
 [Serializable]
