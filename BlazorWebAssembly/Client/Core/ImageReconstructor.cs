@@ -1,5 +1,6 @@
 ﻿using Img2mc.Shared;
 using System.Collections.Concurrent;
+using System.Security.Cryptography;
 
 namespace BlazorWebAssembly.Client.Core;
 
@@ -14,7 +15,7 @@ public class ImageReconstructor
 
     public event Action? OnOutputChanged;
 
-    public readonly Dictionary<TextureMetadata, int> textureCounts = new();
+    public readonly Dictionary<MinecraftBlock, int> blockCounts = new();
 
     public async void ReadFile(Stream stream)
     {
@@ -22,6 +23,7 @@ public class ImageReconstructor
         {
             using Image<Rgba32> img = await Image.LoadAsync<Rgba32>(stream);
             Console.WriteLine($"Read the file as image: {img}");
+            blockCounts.Clear();
             var px = img[0, 0];
 
             if (img.Width > MaxOutputImageSize)
@@ -40,22 +42,19 @@ public class ImageReconstructor
             {
                 for (int y = 0; y < OutputRows; y++)
                 {
-                    buffer[x, y] = FindBestMatchingTexture(img[x, y]);
+                    var result = FindBestMatchingTexture(img[x, y]);
+                    buffer[x, y] = result.Item2;
+                    if (blockCounts.ContainsKey(result.Item1))
+                    {
+                        blockCounts[result.Item1]++;
+                    }
+                    else
+                    {
+                        blockCounts[result.Item1] = 1;
+                    }
                 }
             }
             Console.WriteLine("Done processing image.");
-            textureCounts.Clear();
-            foreach (var tex in buffer)
-            {
-                if (textureCounts.ContainsKey(tex))
-                {
-                    textureCounts[tex]++;
-                }
-                else
-                {
-                    textureCounts[tex] = 1;
-                }
-            }
             OutputTextures = buffer;
             img.Dispose();
             OnOutputChanged?.Invoke();
@@ -66,10 +65,14 @@ public class ImageReconstructor
         }
     }
 
-    private TextureMetadata FindBestMatchingTexture(Rgba32 pixel)
+    private (MinecraftBlock, TextureMetadata) FindBestMatchingTexture(Rgba32 pixel)
     {
         RGB col = new() { r = pixel.R, g = pixel.G, b = pixel.B };
-        return blockData.OrderBy(x => x.textures[0].averageRGB.RGBDistance(col)).Select(x => x.textures[0]).First();
+        var query = from block in blockData
+                    from texture in block.textures
+                    orderby texture.averageRGB.RGBDistance(col) ascending
+                    select (block, texture);
+        return query.First();
     }
 
 }

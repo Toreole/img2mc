@@ -64,10 +64,10 @@ Please Select an image file:
 
 <h2>Required blocks</h2>
 <ol>
-    @foreach (var pair in imageReconstructor.textureCounts.OrderByDescending(x => x.Value))
+    @foreach (var pair in imageReconstructor.blockCounts.OrderByDescending(x => x.Value))
 {
     <li>
-        <img src="images/mc_textures/@pair.Key.fileName" /> @pair.Key.fileName x @pair.Value
+        <img src="images/mc_textures/@pair.Key.FirstTexture" /> @pair.Key.blockName x @pair.Value
     </li>
 }
 </ol>

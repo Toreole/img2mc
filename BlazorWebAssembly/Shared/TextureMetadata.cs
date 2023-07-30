@@ -12,6 +12,8 @@ public class MinecraftBlock
     [JsonInclude]
     public bool exclude = false;
 
+    public string FirstTexture => textures[0].fileName;
+
     public MinecraftBlock()
     {
         textures = Array.Empty<TextureMetadata>();
