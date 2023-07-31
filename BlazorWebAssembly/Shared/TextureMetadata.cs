@@ -61,19 +61,21 @@ public class TextureMetadata
 
     public TextureMetadata() { }
 
+    //obsolete
     public float ColorDistance(MinecraftBlock blockContext, RGB rgb, float contrastPenalty = 0f)
     {
         if (blockContext.exclude || this.exclude)
             return float.MaxValue;
-
-        float distance = averageRGB.RGBDistance(rgb);
-
-        float contrast = (1/valueVariance);
-
-        distance += contrast * contrastPenalty;
-
-        return distance;
+        return ColorDistance(rgb, contrastPenalty);
     }
+	public float ColorDistance(RGB rgb, float contrastPenalty = 0f)
+	{
+		float distance = averageRGB.RGBDistance(rgb);
+
+		distance += valueVariance * contrastPenalty;
+
+		return distance;
+	}
 }
 
 [Serializable]
