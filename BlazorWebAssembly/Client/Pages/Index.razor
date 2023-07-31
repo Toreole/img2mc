@@ -4,12 +4,17 @@
 @using Img2mc.Shared
 @using BlazorWebAssembly.Client.Core
 
+@implements IHandleEvent
+
 @inject HttpClient Http
 @inject ImageReconstructor imageReconstructor
 
 @code {
+    const long fileSizeLimit = 52428800;
     int blockSize = 8;
     public string BlockSizeString => blockSize.ToString() + "px";
+
+    private IBrowserFile? selectedFile;
 
     protected override async Task OnInitializedAsync()
     {
@@ -29,16 +34,36 @@
 
     private void SelectedFileChanged(InputFileChangeEventArgs args)
     {
+        selectedFile = args.File;
         Console.WriteLine($"File Selected: {args.File.Name} ||| is: {args.File.ContentType}");
-        imageReconstructor.ReadFile(args.File.OpenReadStream(maxAllowedSize: 52428800));
+        imageReconstructor.ReadFile(args.File.OpenReadStream(fileSizeLimit));
     }
+
+    private void RetryButtonPressed()
+    {
+        if(selectedFile != null)
+        {
+            imageReconstructor.ReadFile(selectedFile.OpenReadStream(fileSizeLimit));
+        }
+    }
+
+    Task IHandleEvent.HandleEventAsync(EventCallbackWorkItem callback, object? arg)
+        => callback.InvokeAsync(arg);
 }
 
 <PageTitle>Img2Mc</PageTitle>
 
-<MudSlider Min="16" Max="128" @bind-Value="imageReconstructor.MaxOutputImageSize" Style="width: 200px" /> @imageReconstructor.MaxOutputImageSize
-<MudSlider Min="3" Max="16" @bind-Value="blockSize" Style="width: 200px" />
-<p style="--block-size: @BlockSizeString"> Block Size is currently @BlockSizeString </p>
+<MudSlider Min="16" Max="128" @bind-Value="imageReconstructor.MaxOutputImageSize" Style="width: 200px"> 
+    Max Size: @imageReconstructor.MaxOutputImageSize
+</MudSlider>
+<MudSlider Min="3" Max="16" @bind-Value="blockSize" Style=@($"width: 200px; --block-size:{ BlockSizeString }")>
+    Block Size: @blockSize
+</MudSlider>
+<MudSlider Min="0f" Max="10f" @bind-Value="imageReconstructor.ContrastBias" Style="width: 200px" Step="0.05f"> 
+    Contrast Bias: @imageReconstructor.ContrastBias
+</MudSlider>
+<MudButton OnClick="RetryButtonPressed">Retry</MudButton>
+
 
 Please Select an image file:
 

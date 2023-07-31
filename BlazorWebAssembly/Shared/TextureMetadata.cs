@@ -60,6 +60,17 @@ public class TextureMetadata
     }
 
     public TextureMetadata() { }
+
+    public float ColorDistance(RGB rgb, float contrastPenalty = 0f)
+    {
+        float distance = averageRGB.RGBDistance(rgb);
+
+        float contrast = (1/valueVariance);
+
+        distance += contrast * contrastPenalty;
+
+        return distance;
+    }
 }
 
 [Serializable]

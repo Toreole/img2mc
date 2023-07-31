@@ -17,6 +17,7 @@ public class ImageReconstructor
     public int OutputRows { get; private set; } = 0;
     public int OutputColumns { get; private set; } = 0;
     public int MaxOutputImageSize { get; set; } = 128;
+    public float ContrastBias { get; set; } = 2f;
 
     public event Action? OnOutputChanged;
 
@@ -76,7 +77,7 @@ public class ImageReconstructor
         RGB col = new() { r = pixel.R, g = pixel.G, b = pixel.B };
         var query = from block in blockData
                     from texture in block.textures
-                    orderby texture.averageRGB.RGBDistance(col) ascending
+                    orderby texture.ColorDistance(col, ContrastBias) ascending
                     select (block, texture);
         return query.First();
     }
