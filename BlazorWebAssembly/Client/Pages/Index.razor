@@ -94,7 +94,7 @@ Please Select an image file:
                     var tex = imageReconstructor.OutputTextures[column, row];
 
                     <td class="mc_block">
-                        @if(UseTooltips && imageReconstructor.OutputTextures.Length < 1024)
+                        @if(UseTooltips && imageReconstructor.OutputTextures.Length <= 1024)
                         {
                             <MudTooltip Text="@tex.blockName" Arrow Placement="Placement.Top">
                                 <img src="images/mc_textures/@tex.fileName" class="mc_block" />
