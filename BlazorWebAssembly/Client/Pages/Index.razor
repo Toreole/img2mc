@@ -81,9 +81,8 @@ Please Select an image file:
 
 <InputFile OnChange="SelectedFileChanged"></InputFile>
 
-        @if (imageReconstructor.OutputTextures != null)
+@if (imageReconstructor.OutputTextures != null)
 {
-    <div>Output texture is not null here</div>
     <table>
         <thead></thead>
         @for (int row = 0; row < imageReconstructor.OutputRows; row++)
@@ -109,17 +108,18 @@ Please Select an image file:
             </tr>
         }
     </table>
+
+    <h2>Required blocks</h2>
+    <ol>
+        @foreach (var pair in imageReconstructor.blockCounts.OrderByDescending(x => x.Value))
+        {
+            <li>
+                <img src="images/mc_textures/@pair.Key.FirstTexture" /> @pair.Key.blockName x @pair.Value
+            </li>
+        }
+    </ol>
 }
 
-<h2>Required blocks</h2>
-<ol>
-    @foreach (var pair in imageReconstructor.blockCounts.OrderByDescending(x => x.Value))
-    {
-        <li>
-            <img src="images/mc_textures/@pair.Key.FirstTexture" /> @pair.Key.blockName x @pair.Value
-        </li>
-    }
-</ol>
 
 
 <!-- take this out for now.
