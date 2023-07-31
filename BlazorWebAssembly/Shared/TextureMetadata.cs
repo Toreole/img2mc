@@ -68,9 +68,7 @@ public class TextureMetadata
 
         float distance = averageRGB.RGBDistance(rgb);
 
-        float contrast = (1/valueVariance);
-
-        distance += contrast * contrastPenalty;
+        distance += valueVariance * contrastPenalty;
 
         return distance;
     }

@@ -59,7 +59,7 @@
 <MudSlider Min="3" Max="16" @bind-Value="blockSize" Style=@($"width: 200px; --block-size:{ BlockSizeString }")>
     Block Size: @blockSize
 </MudSlider>
-<MudSlider Min="0f" Max="10f" @bind-Value="imageReconstructor.ContrastBias" Style="width: 200px" Step="0.05f"> 
+<MudSlider Min="0f" Max="100f" @bind-Value="imageReconstructor.ContrastBias" Style="width: 200px" Step="0.05f"> 
     Contrast Bias: @imageReconstructor.ContrastBias
 </MudSlider>
 <MudButton OnClick="RetryButtonPressed">Retry</MudButton>
