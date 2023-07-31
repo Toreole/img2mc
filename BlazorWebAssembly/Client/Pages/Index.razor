@@ -14,6 +14,8 @@
     int blockSize = 8;
     public string BlockSizeString => blockSize.ToString() + "px";
 
+    private bool UseTooltips { get; set; } = true;
+
     private IBrowserFile? selectedFile;
 
     protected override async Task OnInitializedAsync()
@@ -56,15 +58,22 @@
 <MudSlider Min="16" Max="128" @bind-Value="imageReconstructor.MaxOutputImageSize" Style="width: 200px"> 
     Max Size: @imageReconstructor.MaxOutputImageSize
 </MudSlider>
+
 <MudSlider Min="3" Max="16" @bind-Value="blockSize" Style=@($"width: 200px; --block-size:{ BlockSizeString }")>
     Block Size: @blockSize
 </MudSlider>
+
 <MudSlider Min="0f" Max="100f" @bind-Value="imageReconstructor.ContrastBias" Style="width: 200px" Step="0.05f"> 
     Contrast Bias: @imageReconstructor.ContrastBias
 </MudSlider>
+
 <MudSlider Min="-1" Max="50" @bind-Value="imageReconstructor.GreedyTextureThreshold" Style="width: 200px" Step="1">
     Greedy Selection Threshold: @imageReconstructor.GreedyTextureThreshold
 </MudSlider>
+
+<MudCheckBox Checked="UseTooltips">
+    Use Tooltips (Only available for max size 32, absolutely wrecks performance!)
+</MudCheckBox>
 <MudButton OnClick="RetryButtonPressed">Retry</MudButton>
 
 
@@ -85,9 +94,16 @@ Please Select an image file:
                     var tex = imageReconstructor.OutputTextures[column, row];
 
                     <td class="mc_block">
-                        <MudTooltip Text="@tex.blockName" Arrow Placement="Placement.Top">
+                        @if(UseTooltips && imageReconstructor.OutputTextures.Length < 1024)
+                        {
+                            <MudTooltip Text="@tex.blockName" Arrow Placement="Placement.Top">
+                                <img src="images/mc_textures/@tex.fileName" class="mc_block" />
+                            </MudTooltip>
+                        }
+                        else
+                        {
                             <img src="images/mc_textures/@tex.fileName" class="mc_block" />
-                        </MudTooltip>
+                        }
                     </td>
                 }
             </tr>
