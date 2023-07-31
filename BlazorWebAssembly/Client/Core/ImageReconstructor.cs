@@ -77,7 +77,7 @@ public class ImageReconstructor
         RGB col = new() { r = pixel.R, g = pixel.G, b = pixel.B };
         var query = from block in blockData
                     from texture in block.textures
-                    orderby texture.ColorDistance(col, ContrastBias) ascending
+                    orderby texture.ColorDistance(block, col, ContrastBias) ascending
                     select (block, texture);
         return query.First();
     }

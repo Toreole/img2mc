@@ -61,8 +61,11 @@ public class TextureMetadata
 
     public TextureMetadata() { }
 
-    public float ColorDistance(RGB rgb, float contrastPenalty = 0f)
+    public float ColorDistance(MinecraftBlock blockContext, RGB rgb, float contrastPenalty = 0f)
     {
+        if (blockContext.exclude || this.exclude)
+            return float.MaxValue;
+
         float distance = averageRGB.RGBDistance(rgb);
 
         float contrast = (1/valueVariance);

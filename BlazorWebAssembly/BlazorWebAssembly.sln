@@ -9,7 +9,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlazorWebAssembly.Client", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlazorWebAssembly.Shared", "Shared\BlazorWebAssembly.Shared.csproj", "{2ABAA9E5-A116-4201-88F1-2A7832267CF0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TexMetadataGenerator", "TexMetadataGenerator\TexMetadataGenerator.csproj", "{7AE0A7E1-CA81-4EAB-B203-2944D40111D2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TexMetadataGenerator", "TexMetadataGenerator\TexMetadataGenerator.csproj", "{7AE0A7E1-CA81-4EAB-B203-2944D40111D2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

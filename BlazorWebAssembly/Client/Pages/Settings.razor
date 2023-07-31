@@ -1,0 +1,32 @@
+﻿@page "/settings"
+
+@using BlazorWebAssembly.Client.Core;
+@using Img2mc.Shared;
+
+@inject ImageReconstructor imageReconstructor
+
+<h3>Settings</h3>
+
+<MudTable Items="@imageReconstructor.blockData"> 
+	<HeaderContent>
+		<MudTh>
+			<MudTableSortLabel SortBy="new Func<MinecraftBlock, string>(x => x.blockName)">Block</MudTableSortLabel>
+		</MudTh>
+		<MudTh>
+			Exclude
+		</MudTh>
+	</HeaderContent>
+	<RowTemplate>
+		<MudTd DataLabel="Block">@context.blockName</MudTd>
+		<MudTd DataLabel="Exclude">
+			<MudCheckBox @bind-Checked="@context.exclude"></MudCheckBox> 
+		</MudTd>
+	</RowTemplate>
+	<PagerContent>
+		<MudTablePager PageSizeOptions="new int[]{50, 100}" />
+	</PagerContent>
+</MudTable>
+
+@code {
+
+}
