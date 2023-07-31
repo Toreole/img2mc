@@ -1,137 +1,107 @@
 ﻿@page "/"
-@using System.Text.Json;
-@using static System.Net.WebRequestMethods;
+@using System.Text.Json
+@using static System.Net.WebRequestMethods
+@using Img2mc.Shared
+@using BlazorWebAssembly.Client.Core
+
+@implements IHandleEvent
 
 @inject HttpClient Http
+@inject ImageReconstructor imageReconstructor
 
 @code {
-    string json = "[]";
-    string firstPixelRGBA = "";
-    TextureMetadata[] textureData = new TextureMetadata[0];
+    const long fileSizeLimit = 52428800;
+    int blockSize = 8;
+    public string BlockSizeString => blockSize.ToString() + "px";
 
-    TextureMetadata[,]? outputTextures = null;
-    int outputRows = 0;
-    int outputColumns = 0;
-
-    bool check = true;
+    private IBrowserFile? selectedFile;
 
     protected override async Task OnInitializedAsync()
     {
+        //blockData persists across page swaps. no need to get it again.
+        if (imageReconstructor.blockData.Length != 0)
+            return;
         var path = "images/tex_metadata.json";
         string json = await Http.GetStringAsync(path);
-        textureData = JsonSerializer.Deserialize<TextureMetadata[]>(json) ?? new TextureMetadata[0];
+        imageReconstructor.blockData = JsonSerializer.Deserialize<MinecraftBlock[]>(json) ?? new MinecraftBlock[0];
+        imageReconstructor.OnOutputChanged += StateHasChanged;
     }
 
-    private void ButtonClicked()
+    ~Index()
     {
-        Console.WriteLine("hello button");
+        imageReconstructor.OnOutputChanged -= StateHasChanged;
     }
 
     private void SelectedFileChanged(InputFileChangeEventArgs args)
     {
+        selectedFile = args.File;
         Console.WriteLine($"File Selected: {args.File.Name} ||| is: {args.File.ContentType}");
-        ReadFile(args.File.OpenReadStream());
+        imageReconstructor.ReadFile(args.File.OpenReadStream(fileSizeLimit));
     }
 
-    private async void ReadFile(Stream stream)
+    private void RetryButtonPressed()
     {
-        try
+        if(selectedFile != null)
         {
-            using Image<Rgba32> img = await Image.LoadAsync<Rgba32>(stream);
-            Console.WriteLine($"Read the file as image: {img.ToString()}");
-            var px = img[0, 0];
-
-            if(img.Width > 128)
-            {
-                img.Mutate(x => x.Resize(128, 0));
-            }
-            else if(img.Height > 128)
-            {
-                img.Mutate(x => x.Resize(0, 128));
-            }
-            Console.WriteLine($"Resized image to {img.ToString()}");
-            outputColumns = img.Width;
-            outputRows = img.Height;
-            var buffer = new TextureMetadata[outputColumns, outputRows];
-            for(int x = 0; x < outputColumns; x++)
-            {
-                for(int y = 0; y < outputRows; y++)
-                {
-                    buffer[x, y] = FindBestMatchingTexture(img[x, y]);
-                }
-            }
-            Console.WriteLine("Done processing image.");
-            outputTextures = buffer;
-            img.Dispose();
-            this.StateHasChanged();
-        }
-        catch(Exception ex)
-        {
-            Console.WriteLine(ex.Message);
+            imageReconstructor.ReadFile(selectedFile.OpenReadStream(fileSizeLimit));
         }
     }
 
-    private TextureMetadata FindBestMatchingTexture(Rgba32 pixel)
-    {
-        RGB col = new() { r = pixel.R, g = pixel.G, b = pixel.B };
-        return textureData.OrderBy(x => x.averageRGB.RGBDistance(col)).First();
-    }
+    Task IHandleEvent.HandleEventAsync(EventCallbackWorkItem callback, object? arg)
+        => callback.InvokeAsync(arg);
 }
-<style>
-    .mc_block {
-        width: 16px;
-        height: 16px;
-        max-height: 16px;
-        line-height: 10px;
-        margin: 0;
-        border: none;
-        padding: 0;
-    }
-    .mc_row {
-        height: 16px;
-        max-height: 16px;
-        line-height: 16px;
-        margin: 0;
-        padding: 0;
-        border: none;
-    }
-</style>
-<PageTitle>Index</PageTitle>
 
-<h1>Hello, world!</h1>
+<PageTitle>Img2Mc</PageTitle>
 
-Welcome to your new app.
+<MudSlider Min="16" Max="128" @bind-Value="imageReconstructor.MaxOutputImageSize" Style="width: 200px"> 
+    Max Size: @imageReconstructor.MaxOutputImageSize
+</MudSlider>
+<MudSlider Min="3" Max="16" @bind-Value="blockSize" Style=@($"width: 200px; --block-size:{ BlockSizeString }")>
+    Block Size: @blockSize
+</MudSlider>
+<MudSlider Min="0f" Max="10f" @bind-Value="imageReconstructor.ContrastBias" Style="width: 200px" Step="0.05f"> 
+    Contrast Bias: @imageReconstructor.ContrastBias
+</MudSlider>
+<MudButton OnClick="RetryButtonPressed">Retry</MudButton>
 
-<SurveyPrompt Title="How is Blazor working for you?" />
 
-<button @onclick="ButtonClicked">
-    Hello Button
-    <!--<Tooltip Placement="TooltipPlacement.Top" Title="Block"> tooltip </Tooltip>Hello There!-->
-</button>
+Please Select an image file:
 
-<InputCheckbox Value="check" ValueExpression="() => check"/> 
+<InputFile OnChange="SelectedFileChanged"></InputFile>
 
-<InputFile OnChange="SelectedFileChanged"></InputFile> 
-
-@if(outputTextures != null)
+        @if (imageReconstructor.OutputTextures != null)
 {
     <div>Output texture is not null here</div>
     <table>
         <thead></thead>
-        @for(int row = 0; row < outputRows; row++)
+        @for (int row = 0; row < imageReconstructor.OutputRows; row++)
         {
-            <tr class="mc_row">
-            @for(int column = 0; column < outputColumns; column ++)
-            {
-                <td class="mc_block">
-                    <img src="images/mc_textures/@outputTextures[column, row].fileName" class="mc_block" />
-                    
-                </td>
-            }
+            <tr class="mc_row" style="--block-size: @BlockSizeString">
+                @for (int column = 0; column < imageReconstructor.OutputColumns; column++)
+                {
+                    var tex = imageReconstructor.OutputTextures[column, row];
+
+                    <td class="mc_block">
+                        <MudTooltip Text="@tex.blockName" Arrow Placement="Placement.Top">
+                            <img src="images/mc_textures/@tex.fileName" class="mc_block" />
+                        </MudTooltip>
+                    </td>
+                }
             </tr>
         }
     </table>
 }
+
+<h2>Required blocks</h2>
+<ol>
+    @foreach (var pair in imageReconstructor.blockCounts.OrderByDescending(x => x.Value))
+    {
+        <li>
+            <img src="images/mc_textures/@pair.Key.FirstTexture" /> @pair.Key.blockName x @pair.Value
+        </li>
+    }
+</ol>
+
 
 <!-- take this out for now.
 <table>
@@ -140,10 +110,6 @@ Welcome to your new app.
             <th scope="col">Texture</th>
             <th scope="col">Block</th>
             <th scope="col">RGB</th>
-            <th scope="col">Hue V</th>
-            <th scope="col">Sat V</th>
-            <th scope="col">Sat A</th>
-            <th scope="col">Val V</th>
         </tr>
     </thead>
     @@foreach (var entry in textureData)
@@ -152,10 +118,6 @@ Welcome to your new app.
             <td><img src="images/mc_textures/@@entry.fileName" /></td>
             <td>@@entry.blockName</td>
             <td style="background-color: @@entry.averageRGB.AsHexString()">@@entry.averageRGB</td>
-            <td>@@entry.hueVariance</td>
-            <td>@@entry.saturationVariance</td>
-            <td>@@entry.averageSaturation</td>
-            <td>@@entry.valueVariance</td>
         </tr>
     }
 </table>
