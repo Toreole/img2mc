@@ -1,12 +1,17 @@
 ﻿using Img2mc.Shared;
+using Microsoft.AspNetCore.Components;
+using SixLabors.ImageSharp.ColorSpaces;
+using SixLabors.ImageSharp.Processing.Processors.Transforms;
 using System.Collections.Concurrent;
-using System.Security.Cryptography;
 
 namespace BlazorWebAssembly.Client.Core;
 
 public class ImageReconstructor
 {
-    public MinecraftBlock[] blockData = Array.Empty<MinecraftBlock>(); 
+    public MinecraftBlock[] blockData = Array.Empty<MinecraftBlock>();
+
+    [Inject]
+    public HttpClient? HttpClient { get; set; }
 
     public TextureMetadata[,] OutputTextures { get; private set; } = new TextureMetadata[0,0];
     public int OutputRows { get; private set; } = 0;
@@ -25,14 +30,15 @@ public class ImageReconstructor
             Console.WriteLine($"Read the file as image: {img}");
             blockCounts.Clear();
             var px = img[0, 0];
-
+            // Available Resamplers:
+            // Bicubic NearestNeighbor Box MitchellNetravali CatmullRom Lanczos2 Lanczos3 Lanczos5 Lanczos8 Welch Robidoux RobidouxSharp Spline Hermite
             if (img.Width > MaxOutputImageSize)
             {
-                img.Mutate(x => x.Resize(MaxOutputImageSize, 0));
+                img.Mutate(x => x.Resize(MaxOutputImageSize, 0, new BicubicResampler()));
             }
             else if (img.Height > MaxOutputImageSize)
             {
-                img.Mutate(x => x.Resize(0, MaxOutputImageSize));
+                img.Mutate(x => x.Resize(0, MaxOutputImageSize, new BicubicResampler()));
             }
             Console.WriteLine($"Resized image to {img}");
             OutputColumns = img.Width;

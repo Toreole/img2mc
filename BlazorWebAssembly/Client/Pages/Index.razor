@@ -13,6 +13,7 @@
 
     protected override async Task OnInitializedAsync()
     {
+        Console.WriteLine($"imageReconstructor has http client injected? {imageReconstructor.HttpClient != null}");
         var path = "images/tex_metadata.json";
         string json = await Http.GetStringAsync(path);
         imageReconstructor.blockData = JsonSerializer.Deserialize<MinecraftBlock[]>(json) ?? new MinecraftBlock[0];
@@ -52,9 +53,13 @@ Please Select an image file:
             <tr class="mc_row" style="--block-size: @BlockSizeString">
                 @for (int column = 0; column < imageReconstructor.OutputColumns; column++)
             {
-                <td class="mc_block">
-                        <img src="images/mc_textures/@imageReconstructor.OutputTextures[column, row].fileName" class="mc_block" />
                     
+                var tex = imageReconstructor.OutputTextures[column, row];
+                    
+                <td class="mc_block">
+                    <MudTooltip Text="@tex.fileName" Arrow Placement="Placement.Top">
+                        <img src="images/mc_textures/@tex.fileName" class="mc_block" />
+                    </MudTooltip>
                 </td>
             }
             </tr>

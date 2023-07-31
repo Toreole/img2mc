@@ -4,6 +4,11 @@
     --block-size: 16px;
 }
 
+.mc_block:hover {
+    outline: 2px solid red;
+    outline-offset: -2px;
+}
+
 .mc_block {
     width: var(--block-size);
     height: var(--block-size);
@@ -13,6 +18,7 @@
     border: none;
     padding: 0;
 }
+
 
 .mc_row {
     height: var(--block-size);
