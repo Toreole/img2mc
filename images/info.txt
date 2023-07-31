@@ -1,2 +1,9 @@
-Code for how the metadata for the textures was generated:
-https://gist.github.com/Toreole/662d068085ee53a4f6f3907f86ec44fc
+To update the textures for a build:
+- extract missing textures from the minecraft [version].jar and put them inside the mc_textures folder
+  - use 7-zip or another software that can open .jar files
+  - textures are located in the /assets/minecraft/textures folder
+- Build and run the TexMetadataGenerator project, for ease just do it VisualStudio directly.
+  - supply the full path to the mc_textures folder (copy paste)
+  - confirm path (y)
+  - for deployments: enter 'n' when asked if the output should be human readable. if you want to look through the file yourself to validate, press 'y'
+- move the __output_metadata.json file out of the mc_textures folder, and rename it to tex_metadata.json
