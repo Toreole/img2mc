@@ -13,7 +13,7 @@ public class ImageReconstructor
     [Inject]
     public HttpClient? HttpClient { get; set; }
 
-    public TextureMetadata[,] OutputTextures { get; private set; } = new TextureMetadata[0,0];
+    public OutputTexture[,] OutputTextures { get; private set; } = new OutputTexture[0,0];
     public int OutputRows { get; private set; } = 0;
     public int OutputColumns { get; private set; } = 0;
     public int MaxOutputImageSize { get; set; } = 128;
@@ -43,13 +43,13 @@ public class ImageReconstructor
             Console.WriteLine($"Resized image to {img}");
             OutputColumns = img.Width;
             OutputRows = img.Height;
-            var buffer = new TextureMetadata[OutputColumns, OutputRows];
+            var buffer = new OutputTexture[OutputColumns, OutputRows];
             for (int x = 0; x < OutputColumns; x++)
             {
                 for (int y = 0; y < OutputRows; y++)
                 {
                     var result = FindBestMatchingTexture(img[x, y]);
-                    buffer[x, y] = result.Item2;
+                    buffer[x, y] = new(result.Item1.blockName, result.Item2.fileName);
                     if (blockCounts.ContainsKey(result.Item1))
                     {
                         blockCounts[result.Item1]++;
@@ -79,6 +79,18 @@ public class ImageReconstructor
                     orderby texture.averageRGB.RGBDistance(col) ascending
                     select (block, texture);
         return query.First();
+    }
+
+    public readonly struct OutputTexture
+    {
+        public readonly string blockName;
+        public readonly string fileName;
+
+        public OutputTexture(string blockName, string fileName)
+        {
+            this.blockName = blockName;
+            this.fileName = fileName;
+        }
     }
 
 }

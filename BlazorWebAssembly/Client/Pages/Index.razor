@@ -13,7 +13,9 @@
 
     protected override async Task OnInitializedAsync()
     {
-        Console.WriteLine($"imageReconstructor has http client injected? {imageReconstructor.HttpClient != null}");
+        //blockData persists across page swaps. no need to get it again.
+        if (imageReconstructor.blockData.Length != 0)
+            return;
         var path = "images/tex_metadata.json";
         string json = await Http.GetStringAsync(path);
         imageReconstructor.blockData = JsonSerializer.Deserialize<MinecraftBlock[]>(json) ?? new MinecraftBlock[0];
@@ -36,14 +38,13 @@
 
 <MudSlider Min="16" Max="128" @bind-Value="imageReconstructor.MaxOutputImageSize" Style="width: 200px" /> @imageReconstructor.MaxOutputImageSize
 <MudSlider Min="3" Max="16" @bind-Value="blockSize" Style="width: 200px" />
-
 <p style="--block-size: @BlockSizeString"> Block Size is currently @BlockSizeString </p>
 
 Please Select an image file:
 
-<InputFile OnChange="SelectedFileChanged"></InputFile> 
+<InputFile OnChange="SelectedFileChanged"></InputFile>
 
-@if(imageReconstructor.OutputTextures != null)
+        @if (imageReconstructor.OutputTextures != null)
 {
     <div>Output texture is not null here</div>
     <table>
@@ -52,16 +53,15 @@ Please Select an image file:
         {
             <tr class="mc_row" style="--block-size: @BlockSizeString">
                 @for (int column = 0; column < imageReconstructor.OutputColumns; column++)
-            {
-                    
-                var tex = imageReconstructor.OutputTextures[column, row];
-                    
-                <td class="mc_block">
-                    <MudTooltip Text="@tex.fileName" Arrow Placement="Placement.Top">
-                        <img src="images/mc_textures/@tex.fileName" class="mc_block" />
-                    </MudTooltip>
-                </td>
-            }
+                {
+                    var tex = imageReconstructor.OutputTextures[column, row];
+
+                    <td class="mc_block">
+                        <MudTooltip Text="@tex.blockName" Arrow Placement="Placement.Top">
+                            <img src="images/mc_textures/@tex.fileName" class="mc_block" />
+                        </MudTooltip>
+                    </td>
+                }
             </tr>
         }
     </table>
@@ -70,11 +70,11 @@ Please Select an image file:
 <h2>Required blocks</h2>
 <ol>
     @foreach (var pair in imageReconstructor.blockCounts.OrderByDescending(x => x.Value))
-{
-    <li>
-        <img src="images/mc_textures/@pair.Key.FirstTexture" /> @pair.Key.blockName x @pair.Value
-    </li>
-}
+    {
+        <li>
+            <img src="images/mc_textures/@pair.Key.FirstTexture" /> @pair.Key.blockName x @pair.Value
+        </li>
+    }
 </ol>
 
 
