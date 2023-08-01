@@ -63,11 +63,11 @@
     Block Size: @blockSize
 </MudSlider>
 
-<MudSlider Min="0f" Max="100f" @bind-Value="imageReconstructor.ContrastBias" Style="width: 200px" Step="0.05f"> 
+<MudSlider Min="0f" Max="100f" @bind-Value="imageReconstructor.ContrastBias" Style="width: 200px" Step="1f"> 
     Contrast Bias: @imageReconstructor.ContrastBias
 </MudSlider>
 
-<MudSlider Min="-1" Max="50" @bind-Value="imageReconstructor.GreedyTextureThreshold" Style="width: 200px" Step="1">
+<MudSlider Min="-1" Max="100" @bind-Value="imageReconstructor.GreedyTextureThreshold" Style="width: 200px" Step="1">
     Greedy Selection Threshold: @imageReconstructor.GreedyTextureThreshold
 </MudSlider>
 
