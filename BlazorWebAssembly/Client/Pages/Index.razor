@@ -20,13 +20,13 @@
 
     protected override async Task OnInitializedAsync()
     {
+        imageReconstructor.OnOutputChanged += StateHasChanged;
         //blockData persists across page swaps. no need to get it again.
         if (imageReconstructor.blockData.Length != 0)
             return;
-        var path = "images/tex_metadata.json";
+        string path = "images/tex_metadata.json";
         string json = await Http.GetStringAsync(path);
         imageReconstructor.blockData = JsonSerializer.Deserialize<MinecraftBlock[]>(json) ?? new MinecraftBlock[0];
-        imageReconstructor.OnOutputChanged += StateHasChanged;
     }
 
     ~Index()
