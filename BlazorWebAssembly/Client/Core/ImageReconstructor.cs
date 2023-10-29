@@ -79,7 +79,8 @@ public class ImageReconstructor
 
     private (MinecraftBlock, TextureMetadata) FindBestMatchingTexture(Rgba32 pixel)
     {
-        RGB col = new() { r = pixel.R, g = pixel.G, b = pixel.B };
+        float alpha = pixel.A / 255f;
+        RGB col = new() { r = (byte)(pixel.R * alpha), g = (byte)(pixel.G * alpha), b = (byte)(pixel.B * alpha) };
 
         if(knownRGBs.ContainsKey(col))
         {
