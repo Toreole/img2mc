@@ -64,11 +64,11 @@
 </MudSlider>
 
 <MudSlider Min="0f" Max="100f" @bind-Value="imageReconstructor.ContrastBias" Style="width: 200px" Step="1f"> 
-    Contrast Bias: @imageReconstructor.ContrastBias
+    Smoothness: @imageReconstructor.ContrastBias
 </MudSlider>
 
 <MudSlider Min="-1" Max="100" @bind-Value="imageReconstructor.GreedyTextureThreshold" Style="width: 200px" Step="1">
-    Greedy Selection Threshold: @imageReconstructor.GreedyTextureThreshold
+    Greediness: @imageReconstructor.GreedyTextureThreshold
 </MudSlider>
 
 <MudCheckBox Checked="UseTooltips">

@@ -7,7 +7,10 @@
 
 <h3>Settings</h3>
 
-<MudTable Items="@imageReconstructor.blockData"> 
+<MudTable Items="@imageReconstructor.blockData" Filter="FilterWrapper">
+	<ToolBarContent>
+		<MudTextField @bind-Value="filterString" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+	</ToolBarContent>
 	<HeaderContent>
 		<MudTh>
 			<MudTableSortLabel SortBy="new Func<MinecraftBlock, string>(x => x.blockName)">Block</MudTableSortLabel>
@@ -28,5 +31,11 @@
 </MudTable>
 
 @code {
-
+	private string filterString = "";
+	private bool FilterWrapper(MinecraftBlock block) => FilterBlock(block, filterString);
+	private bool FilterBlock(MinecraftBlock block, string filter)
+	{
+		//inefficient but ok
+		return block.blockName.ToLower().Contains(filter.ToLower());
+	}
 }
